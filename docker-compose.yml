@@ -1,0 +1,66 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: photoingest-backend
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=production
+      - PORT=5000
+      - UPLOAD_DESTINATION_PATH=/app/uploads
+      - SETTINGS_FILE=/app/uploads/settings.json
+      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:5173}
+    volumes:
+      - photoingest-uploads:/app/uploads
+      - /media:/media:ro
+      - /run/media:/run/media:ro
+    networks:
+      - photoingest-network
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=${VITE_API_URL:-http://localhost:5000/api}
+    container_name: photoingest-frontend
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    networks:
+      - photoingest-network
+    restart: unless-stopped
+
+  scanner:
+    build:
+      context: ./scanner
+      dockerfile: Dockerfile
+    container_name: photoingest-scanner
+    privileged: true
+    environment:
+      - BACKEND_URL=http://backend:5000
+      - POLL_INTERVAL=30
+    volumes:
+      - /dev:/dev
+      - /proc:/proc:ro
+      - /sys:/sys:ro
+      - /run/udev:/run/udev:ro
+      - /media:/media:ro
+      - /run/media:/run/media:ro
+    depends_on:
+      - backend
+    networks:
+      - photoingest-network
+    restart: unless-stopped
+
+volumes:
+  photoingest-uploads:
+    driver: local
+
+networks:
+  photoingest-network:
+    driver: bridge

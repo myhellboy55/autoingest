@@ -1,0 +1,15 @@
+node_modules/
+.env
+.env.local
+.DS_Store
+*.log
+npm-debug.log*
+dist/
+.vite/
+config/settings.json
+uploads/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo

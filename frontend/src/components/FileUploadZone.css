@@ -1,0 +1,52 @@
+.upload-zone {
+  border: 2px dashed #4CAF50;
+  border-radius: 8px;
+  padding: 3rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  background-color: #f9f9f9;
+}
+
+.upload-zone:hover {
+  border-color: #45a049;
+  background-color: #f0f0f0;
+}
+
+.upload-zone.drag-over {
+  border-color: #45a049;
+  background-color: #e8f5e9;
+  box-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
+}
+
+.upload-content {
+  pointer-events: none;
+}
+
+.upload-text {
+  font-size: 1.1rem;
+  color: #666;
+  margin-bottom: 1rem;
+}
+
+.upload-button {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  pointer-events: auto;
+}
+
+.upload-button:hover {
+  background-color: #45a049;
+}
+
+.upload-button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
