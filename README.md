@@ -2,6 +2,35 @@
 
 A full-stack application for automatically uploading photos from SD cards to internal drives.
 
+## Quick Start (Docker)
+
+The fastest way to run PhotoIngest is with Docker Compose — it starts the backend, frontend, and SD card scanner together.
+
+**Prerequisites:** [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running.
+
+1. Clone the repo:
+   ```bash
+   git clone https://github.com/myhellboy55/autoingest.git
+   cd autoingest
+   ```
+2. Copy the environment file and edit if needed:
+   ```bash
+   cp .env.example .env
+   ```
+3. Start all services:
+   ```bash
+   docker compose up --build
+   ```
+4. Open http://localhost:5173 in your browser.
+
+To stop: `docker compose down`
+
+### Scanner Service
+
+The `scanner` container watches `/media` and `/run/media` on the host for SD card insertion and notifies the backend automatically. It runs with privileged access so it can detect hardware events. On Linux/Raspberry Pi hosts this works out of the box; on macOS/Windows it is skipped (use manual upload instead).
+
+---
+
 ## Project Structure
 
 ```
