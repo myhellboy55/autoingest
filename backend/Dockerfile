@@ -3,6 +3,9 @@ FROM node:18-alpine
 
 WORKDIR /app
 
+# Mount utilities for SD card access at ingest time
+RUN apk add --no-cache util-linux exfatprogs
+
 # Copy package files
 COPY package*.json ./
 

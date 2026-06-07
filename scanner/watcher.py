@@ -40,6 +40,7 @@ def report_drives(mountpoints: list[str], scanner: Scanner) -> None:
             'id': label,
             'label': label,
             'mountpoint': mp,
+            'device': scanner.mountpoint_to_device.get(mp, ''),
             'files': files,
             'fileCount': len(files),
         })
@@ -73,11 +74,6 @@ def main() -> None:
             report_drives(roots, scanner)
         except Exception as e:
             logger.error("Scan cycle error: %s", e)
-        finally:
-            try:
-                scanner.unmount_mountpoints()
-            except Exception:
-                pass
 
         time.sleep(POLL_INTERVAL)
 

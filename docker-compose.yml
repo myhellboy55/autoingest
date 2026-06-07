@@ -4,6 +4,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: photoingest-backend
+    privileged: true
     ports:
       - "5000:5000"
     environment:
@@ -14,8 +15,10 @@ services:
       - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:5173}
     volumes:
       - photoingest-uploads:/app/uploads
+      - /dev:/dev
       - /media:/media:ro
       - /run/media:/run/media:ro
+      - /mnt/auto_media:/mnt/auto_media
     networks:
       - photoingest-network
     restart: unless-stopped
@@ -51,6 +54,7 @@ services:
       - /run/udev:/run/udev:ro
       - /media:/media:ro
       - /run/media:/run/media:ro
+      - /mnt/auto_media:/mnt/auto_media
     depends_on:
       - backend
     networks:

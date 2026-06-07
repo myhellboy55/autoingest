@@ -18,6 +18,7 @@ class Scanner:
         self._excluded_mounts = self._compute_excluded_mounts()
         self._last_mounted = []
         self._auto_mount_root = '/mnt/auto_media'
+        self.mountpoint_to_device = {}  # mountpoint → /dev/xxx
 
     def _read_mounts(self):
         mounts = []
@@ -236,6 +237,7 @@ class Scanner:
                 tgt = self._mount_device(f'/dev/{name}')
                 if tgt:
                     logger.info("Mounted /dev/%s -> %s", name, tgt)
+                    self.mountpoint_to_device[tgt] = f'/dev/{name}'
                     if tgt not in mounted_points:
                         self._last_mounted.append(tgt)
                     scan_roots.append(tgt)
@@ -286,7 +288,7 @@ class Scanner:
                 dirs[:] = [d for d in dirs if not self._is_excluded_path(os.path.join(root, d))]
                 for file in files:
                     try:
-                        if file.lower().endswith(extensions):
+                        if file.lower().endswith(extensions) and not file.startswith('._'):
                             full = os.path.join(root, file)
                             media_files.append(full)
                             found_in_root += 1

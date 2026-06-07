@@ -1,6 +1,24 @@
 import fs from 'fs';
 import path from 'path';
+import { execSync } from 'child_process';
 import { getDestinationPath } from '../config/storage.js';
+
+function mountDevice(device, mountpoint) {
+  fs.mkdirSync(mountpoint, { recursive: true });
+  try {
+    execSync(`mount ${device} ${mountpoint}`, { stdio: 'pipe' });
+  } catch {
+    try {
+      execSync(`mount -t exfat ${device} ${mountpoint}`, { stdio: 'pipe' });
+    } catch (e) {
+      throw new Error(`Failed to mount ${device}: ${e.message}`);
+    }
+  }
+}
+
+function unmountDevice(mountpoint) {
+  try { execSync(`umount ${mountpoint}`, { stdio: 'pipe' }); } catch {}
+}
 
 // driveId → {id, label, mountpoint, files, fileCount, lastSeen}
 const drives = {};
@@ -74,28 +92,45 @@ export const startIngest = (req, res) => {
   };
 
   // Run async — do not await
-  runIngest(jobId, sortedFiles, baseName.trim(), Number(startSequence));
+  runIngest(jobId, sortedFiles, baseName.trim(), Number(startSequence), drive.device || '');
 
   res.json({ jobId });
 };
 
-async function runIngest(jobId, files, baseName, startSequence) {
+async function runIngest(jobId, files, baseName, startSequence, device) {
   const dest = getDestinationPath();
   const pad = String(files.length + startSequence - 1).length;
+  let mounted = null;
 
-  for (let i = 0; i < files.length; i++) {
-    const src = files[i];
-    const seq = String(startSequence + i).padStart(Math.max(pad, 3), '0');
-    const ext = path.extname(src).toLowerCase();
-    const newName = `${baseName}_${seq}${ext}`;
-    const destPath = path.join(dest, newName);
-
+  if (device) {
+    const mountpoint = `/mnt/auto_media/${path.basename(device)}`;
     try {
-      await fs.promises.copyFile(src, destPath);
-      jobs[jobId].completed += 1;
+      mountDevice(device, mountpoint);
+      mounted = mountpoint;
     } catch (err) {
-      jobs[jobId].errors.push({ file: path.basename(src), error: err.message });
+      jobs[jobId].status = 'error';
+      jobs[jobId].errors.push({ file: '', error: `Mount failed: ${err.message}` });
+      return;
     }
+  }
+
+  try {
+    for (let i = 0; i < files.length; i++) {
+      const src = files[i];
+      const seq = String(startSequence + i).padStart(Math.max(pad, 3), '0');
+      const ext = path.extname(src).toLowerCase();
+      const newName = `${baseName}_${seq}${ext}`;
+      const destPath = path.join(dest, newName);
+
+      try {
+        await fs.promises.copyFile(src, destPath);
+        jobs[jobId].completed += 1;
+      } catch (err) {
+        jobs[jobId].errors.push({ file: path.basename(src), error: err.message });
+      }
+    }
+  } finally {
+    if (mounted) unmountDevice(mounted);
   }
 
   jobs[jobId].status = jobs[jobId].errors.length === files.length ? 'error' : 'done';
