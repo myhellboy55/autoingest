@@ -8,3 +8,6 @@ export const startIngest = (driveId, baseName, startSequence = 1) =>
 
 export const getJobProgress = (jobId) =>
   apiClient.get(`/ingest/${jobId}`);
+
+export const ejectDrive = (driveId) =>
+  apiClient.post(`/drives/${encodeURIComponent(driveId)}/eject`);

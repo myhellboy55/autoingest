@@ -58,6 +58,7 @@
   display: flex;
   align-items: center;
   gap: 1rem;
+  justify-content: space-between;
   margin-bottom: 1.25rem;
 }
 
@@ -139,6 +140,29 @@
 
 .btn-ingest:hover {
   background: #388E3C;
+}
+
+.btn-eject {
+  background: none;
+  color: #888;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  margin-left: auto;
+  transition: color 0.2s, border-color 0.2s;
+  white-space: nowrap;
+}
+
+.btn-eject:hover:not(:disabled) {
+  color: #c0392b;
+  border-color: #c0392b;
+}
+
+.btn-eject:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 /* Progress */

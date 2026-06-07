@@ -136,6 +136,22 @@ async function runIngest(jobId, files, baseName, startSequence, device) {
   jobs[jobId].status = jobs[jobId].errors.length === files.length ? 'error' : 'done';
 }
 
+// ── Eject ────────────────────────────────────────────────────────────────────
+
+export const ejectDrive = (req, res) => {
+  const { driveId } = req.params;
+  const drive = drives[driveId];
+  if (!drive) return res.status(404).json({ error: 'Drive not found' });
+
+  if (drive.device) {
+    const mountpoint = `/mnt/auto_media/${path.basename(drive.device)}`;
+    unmountDevice(mountpoint);
+  }
+
+  delete drives[driveId];
+  res.json({ ok: true });
+};
+
 // ── Job progress ─────────────────────────────────────────────────────────────
 
 export const getJob = (req, res) => {

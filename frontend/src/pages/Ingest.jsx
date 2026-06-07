@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { getDrives, startIngest, getJobProgress } from '../api/ingestAPI.js';
+import { getDrives, startIngest, getJobProgress, ejectDrive } from '../api/ingestAPI.js';
 import './Ingest.css';
 
 const DRIVE_POLL_MS = 5000;
@@ -13,12 +13,13 @@ function formatBytes(bytes) {
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
 }
 
-function DriveCard({ drive }) {
+function DriveCard({ drive, onEjected }) {
   const [baseName, setBaseName] = useState('');
   const [startSeq, setStartSeq] = useState(1);
   const [jobId, setJobId] = useState(null);
   const [job, setJob] = useState(null);
   const [error, setError] = useState('');
+  const [ejecting, setEjecting] = useState(false);
   const pollRef = useRef(null);
 
   useEffect(() => {
@@ -47,6 +48,16 @@ function DriveCard({ drive }) {
     }
   };
 
+  const handleEject = async () => {
+    setEjecting(true);
+    try {
+      await ejectDrive(drive.id);
+      onEjected(drive.id);
+    } catch {
+      setEjecting(false);
+    }
+  };
+
   const progress = job ? Math.round((job.completed / job.total) * 100) : 0;
   const isDone = job?.status === 'done';
   const isRunning = job?.status === 'running';
@@ -59,6 +70,14 @@ function DriveCard({ drive }) {
           <h2 className="drive-card__label">{drive.label}</h2>
           <p className="drive-card__meta">{drive.fileCount} file{drive.fileCount !== 1 ? 's' : ''}</p>
         </div>
+        <button
+          className="btn-eject"
+          onClick={handleEject}
+          disabled={isRunning || ejecting}
+          title="Eject drive"
+        >
+          {ejecting ? 'Ejecting…' : '⏏ Eject'}
+        </button>
       </div>
 
       {!jobId && (
@@ -149,6 +168,10 @@ export default function Ingest() {
     return () => clearInterval(id);
   }, []);
 
+  const handleEjected = (driveId) => {
+    setDrives(prev => prev.filter(d => d.id !== driveId));
+  };
+
   if (loading) return <p className="ingest-status">Looking for drives…</p>;
 
   if (drives.length === 0) {
@@ -165,7 +188,7 @@ export default function Ingest() {
     <div className="ingest-page">
       <h1 className="ingest-title">Ingest</h1>
       <div className="drives-list">
-        {drives.map(drive => <DriveCard key={drive.id} drive={drive} />)}
+        {drives.map(drive => <DriveCard key={drive.id} drive={drive} onEjected={handleEjected} />)}
       </div>
     </div>
   );
